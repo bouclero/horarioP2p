@@ -108,12 +108,13 @@
             font-weight: 500;
         }
         
-        input, select, button {
+        input, select, button, textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         button {
@@ -164,6 +165,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
+            align-items: flex-end;
         }
         
         .schedule-container {
@@ -202,6 +204,7 @@
         
         .worker-row td:first-child {
             font-weight: 600;
+            text-align: left;
         }
         
         .time-cell {
@@ -517,6 +520,11 @@
                         <i class="fas fa-eraser"></i> Limpiar Firma
                      </button>
                 </div>
+                <!-- CAMBIO: AÑADIDO CAMPO DE INCIDENCIAS -->
+                <div class="input-group">
+                    <label for="modal-incidents">Incidencias:</label>
+                    <textarea id="modal-incidents" rows="3"></textarea>
+                </div>
                 <div class="buttons-group">
                     <button id="cancel-time-btn" class="danger"><i class="fas fa-times"></i> Cancelar</button>
                     <button id="save-time-btn" class="secondary"><i class="fas fa-save"></i> Guardar Registro</button>
@@ -721,9 +729,7 @@
                     const dateStr = `${day}/${month + 1}/${year}`;
                     const cell = document.createElement('td');
                     cell.className = 'time-cell';
-                    const entry = scheduleData[worker]?.[dateStr] || {};
-                    cell.innerHTML = entry.entryTime || entry.exitTime ? `<div>${entry.entryTime || '--:--'} - ${entry.exitTime || '--:--'}</div>` : '<div class="highlight">Editar</div>';
-                    if (entry.signature) cell.style.backgroundColor = 'var(--light)';
+                    updateScheduleCellContent(cell, worker, dateStr);
                     cell.addEventListener('click', () => openTimeModal(worker, dateStr));
                     row.appendChild(cell);
                 }
@@ -731,6 +737,7 @@
             });
         }
         
+        // CAMBIO: Cargar datos en el modal
         function openTimeModal(worker, dateStr) {
             currentWorker = worker;
             currentDate = dateStr;
@@ -738,6 +745,7 @@
             const entry = scheduleData[worker][dateStr] || {};
             document.getElementById('entry-time').value = entry.entryTime || '';
             document.getElementById('exit-time').value = entry.exitTime || '';
+            document.getElementById('modal-incidents').value = entry.incidents || ''; // Cargar incidencias
             modalSignaturePad.clear();
             if (entry.signature) {
                 modalSignaturePad.fromDataURL(entry.signature);
@@ -745,15 +753,18 @@
             document.getElementById('time-modal').style.display = 'flex';
         }
         
+        // CAMBIO: Guardar datos del modal
         function saveTime() {
             const entryTime = document.getElementById('entry-time').value;
             const exitTime = document.getElementById('exit-time').value;
+            const incidents = document.getElementById('modal-incidents').value.trim(); // Guardar incidencias
             if (entryTime && exitTime && exitTime < entryTime) return showNotification('La hora de salida no puede ser anterior a la de entrada', 'error');
             const signatureData = modalSignaturePad.isEmpty() ? null : modalSignaturePad.toDataURL();
             scheduleData[currentWorker][currentDate] = { 
                 entryTime: entryTime || null, 
                 exitTime: exitTime || null,
-                signature: signatureData
+                signature: signatureData,
+                incidents: incidents // Añadir incidencias al objeto
             };
             updateScheduleCell(currentWorker, currentDate);
             sendScheduleUpdate(currentWorker, currentDate, scheduleData[currentWorker][currentDate]);
@@ -761,16 +772,26 @@
             closeModal();
         }
         
+        // CAMBIO: Actualizar celda con indicador de incidencia
+        function updateScheduleCellContent(cell, worker, dateStr) {
+            const entry = scheduleData[worker]?.[dateStr] || {};
+            let cellContent = entry.entryTime || entry.exitTime ? `<div>${entry.entryTime || '--:--'} - ${entry.exitTime || '--:--'}</div>` : '<div class="highlight">Editar</div>';
+            
+            if (entry.incidents) {
+                cellContent += `<i class="fas fa-exclamation-circle" style="color: var(--danger); font-size: 0.8rem; margin-left: 5px;" title="Incidencia: ${entry.incidents}"></i>`;
+            }
+
+            cell.innerHTML = cellContent;
+            cell.style.backgroundColor = entry.signature ? 'var(--light)' : '';
+        }
+
         function updateScheduleCell(worker, dateStr) {
             const dayIndex = parseInt(dateStr.split('/')[0]);
             const row = Array.from(document.querySelectorAll('.worker-row')).find(r => r.cells[0].textContent === worker);
             if (!row) return;
             const cell = row.cells[dayIndex];
             if (!cell) return;
-            
-            const entry = scheduleData[worker][dateStr];
-            cell.innerHTML = entry.entryTime || entry.exitTime ? `<div>${entry.entryTime || '--:--'} - ${entry.exitTime || '--:--'}</div>` : '<div class="highlight">Editar</div>';
-            cell.style.backgroundColor = entry.signature ? 'var(--light)' : '';
+            updateScheduleCellContent(cell, worker, dateStr);
         }
         
         // --- INFORMES Y EXPORTACIÓN ---
@@ -814,6 +835,7 @@
             showNotification('Informe generado correctamente', 'success');
         }
         
+        // CAMBIO: Añadir incidencias al informe TXT
         function exportDataAsTxt() {
             const month = parseInt(document.getElementById('month-select').value);
             const year = parseInt(document.getElementById('year-select').value);
@@ -835,6 +857,7 @@
                     if (entry && (entry.entryTime || entry.exitTime)) {
                         txtContent += `Fecha: ${dateStr}\n  Entrada: ${entry.entryTime || 'N/A'}\n  Salida:  ${entry.exitTime || 'N/A'}\n`;
                         if (entry.signature) txtContent += `  (Firmado)\n`;
+                        if (entry.incidents) txtContent += `  Incidencia: ${entry.incidents}\n`;
                         txtContent += `\n`;
                         hasDataForMonth = true;
                     }
