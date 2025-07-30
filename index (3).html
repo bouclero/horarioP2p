@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Horario bajo Licencia de JJRAMIREZ</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 25px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title i {
+            font-size: 1.6rem;
+        }
+        
+        .connection-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .connection-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .p2p-section, .data-section {
+            padding: 20px;
+            border-radius: 8px;
+            background: var(--light);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        button.secondary {
+            background: var(--secondary);
+        }
+        
+        button.danger {
+            background: var(--danger);
+        }
+        
+        .status-indicator {
+            padding: 10px;
+            text-align: center;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        
+        .status-offline {
+            background: #ffebee;
+            color: var(--danger);
+        }
+        
+        .status-online {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .month-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .schedule-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        tr:hover {
+            background: #e3f2fd;
+        }
+        
+        .day-header {
+            min-width: 120px;
+        }
+        
+        .worker-row td:first-child {
+            font-weight: 600;
+        }
+        
+        .time-cell {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .time-cell:hover {
+            background: #d1e7ff;
+        }
+        
+        .signature-pad {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            margin-bottom: 10px;
+            cursor: crosshair;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .close {
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .buttons-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .buttons-group button {
+            flex: 1;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: var(--secondary);
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .info-badge {
+            display: inline-block;
+            background: #e3f2fd;
+            color: var(--primary);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 5px 0;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, rgba(52, 152, 219, 0.2), rgba(46, 204, 113, 0.2));
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .time-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .time-input input[type="time"] {
+            width: 120px;
+            padding: 8px;
+        }
+        
+        .report-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .report-table th, .report-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .report-table th {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .report-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-alt"></i> Control Horario bajo Licencia de JJRAMIREZ</h1>
+            <p class="subtitle">Gestión de horarios con sincronización en tiempo real - Sin backend ni base de datos</p>
+        </header>
+        
+        <div class="connection-panel">
+            <div class="p2p-section card">
+                <h2 class="card-title"><i class="fas fa-wifi"></i> Conexión P2P</h2>
+                <div class="input-group">
+                    <label for="peer-action">Acción:</label>
+                    <select id="peer-action">
+                        <option value="host">Crear sala (Host)</option>
+                        <option value="client">Unirse a sala (Cliente)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="peer-id">ID de Sala:</label>
+                    <input type="text" id="peer-id" placeholder="ID generado automáticamente...">
+                </div>
+                <button id="connect-btn" class="secondary">
+                    <i class="fas fa-plug"></i> Conectar
+                </button>
+                <div id="connection-status" class="status-indicator status-offline">
+                    <i class="fas fa-times-circle"></i> Desconectado
+                </div>
+                <div class="info-badge">
+                    <i class="fas fa-info-circle"></i> Usando WebRTC para comunicación P2P
+                </div>
+            </div>
+            
+            <div class="data-section card">
+                <h2 class="card-title"><i class="fas fa-database"></i> Gestión de Datos</h2>
+                <div class="input-group">
+                    <label for="worker-name">Nombre del Trabajador:</label>
+                    <input type="text" id="worker-name" placeholder="Ej: Juan Pérez">
+                </div>
+                <div class="buttons-group">
+                    <button id="add-worker-btn" class="secondary">
+                        <i class="fas fa-user-plus"></i> Añadir
+                    </button>
+                    <button id="save-data-btn">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+                <div class="buttons-group" style="margin-top: 15px;">
+                    <button id="export-txt-btn" class="secondary">
+                        <i class="fas fa-file-alt"></i> Exp. Informe (TXT)
+                    </button>
+                    <button id="export-json-btn" class="secondary">
+                        <i class="fas fa-file-export"></i> Exp. Datos (JSON)
+                    </button>
+                    <button id="import-btn">
+                        <i class="fas fa-file-import"></i> Importar Datos
+                    </button>
+                    <button id="reset-data-btn" class="danger">
+                        <i class="fas fa-trash-alt"></i> Borrar Todo
+                    </button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+                <div class="info-badge">
+                    <i class="fas fa-info-circle"></i> Datos guardados localmente
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-calendar-day"></i> Horario Mensual</h2>
+            <div class="month-selector">
+                <div class="input-group" style="flex: 1;">
+                    <label for="month-select">Mes:</label>
+                    <select id="month-select">
+                        <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option><option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option><option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                    </select>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label for="year-select">Año:</label>
+                    <input type="number" id="year-select" min="2024" max="2030" value="2025">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>&nbsp;</label>
+                    <button id="generate-btn" class="secondary">
+                        <i class="fas fa-sync-alt"></i> Generar
+                    </button>
+                </div>
+            </div>
+            <div class="schedule-container">
+                <table id="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Trabajador</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-chart-bar"></i> Informe Mensual</h2>
+            <div class="report-section">
+                <button id="generate-report-btn" class="secondary">
+                    <i class="fas fa-calculator"></i> Calcular Horas Trabajadas
+                </button>
+                <div id="report-results" style="margin-top: 20px; display: none;">
+                    <h3>Resumen de Horas por Trabajador</h3>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Trabajador</th><th>Total Horas</th><th>Total Minutos</th><th>Formato HH:MM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Aplicación Web P2P - Funciona sin backend ni base de datos | WebRTC + PeerJS</p>
+            <p class="info-badge">Los datos se almacenan localmente y se sincronizan mediante comunicación punto a punto</p>
+        </footer>
+    </div>
+    
+    <div id="time-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Editar Registro</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Entrada:</label>
+                    <div class="time-input"><input type="time" id="entry-time"><button id="set-entry-now" class="secondary">Ahora</button></div>
+                </div>
+                <div class="input-group">
+                    <label>Salida:</label>
+                    <div class="time-input"><input type="time" id="exit-time"><button id="set-exit-now" class="secondary">Ahora</button></div>
+                </div>
+                <div class="input-group">
+                     <label>Firma del trabajador:</label>
+                     <canvas id="modal-signature-pad" class="signature-pad" width="438" height="150"></canvas>
+                     <button id="modal-clear-signature" class="danger" style="width: auto; padding: 8px 15px; margin-top: -5px;">
+                        <i class="fas fa-eraser"></i> Limpiar Firma
+                     </button>
+                </div>
+                <div class="buttons-group">
+                    <button id="cancel-time-btn" class="danger"><i class="fas fa-times"></i> Cancelar</button>
+                    <button id="save-time-btn" class="secondary"><i class="fas fa-save"></i> Guardar Registro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <script>
+        // --- VARIABLES GLOBALES ---
+        let peer = null;
+        let conn = null;
+        let modalSignaturePad = null;
+        let currentWorker = null;
+        let currentDate = null;
+        let workers = [];
+        let scheduleData = {};
+        
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initSignaturePads();
+            setupEventListeners();
+            loadSavedData();
+            const now = new Date();
+            document.getElementById('month-select').value = now.getMonth();
+            document.getElementById('year-select').value = now.getFullYear();
+            generateSchedule();
+        });
+        
+        function initSignaturePads() {
+            const modalCanvas = document.getElementById('modal-signature-pad');
+            modalSignaturePad = new SignaturePad(modalCanvas, {
+                backgroundColor: 'rgb(255, 255, 255)'
+            });
+        }
+        
+        function setupEventListeners() {
+            document.getElementById('connect-btn').addEventListener('click', handleConnection);
+            document.getElementById('add-worker-btn').addEventListener('click', addWorker);
+            document.getElementById('save-data-btn').addEventListener('click', saveData);
+            document.getElementById('export-txt-btn').addEventListener('click', exportDataAsTxt);
+            document.getElementById('export-json-btn').addEventListener('click', exportDataAsJson);
+            document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
+            document.getElementById('import-file').addEventListener('change', importData);
+            document.getElementById('reset-data-btn').addEventListener('click', resetAllData);
+            document.getElementById('generate-btn').addEventListener('click', generateSchedule);
+            document.getElementById('generate-report-btn').addEventListener('click', generateMonthlyReport);
+            document.querySelectorAll('.close').forEach(btn => btn.addEventListener('click', closeModal));
+            document.getElementById('modal-clear-signature').addEventListener('click', () => modalSignaturePad.clear());
+            document.getElementById('set-entry-now').addEventListener('click', () => setCurrentTime('entry'));
+            document.getElementById('set-exit-now').addEventListener('click', () => setCurrentTime('exit'));
+            document.getElementById('save-time-btn').addEventListener('click', saveTime);
+            document.getElementById('cancel-time-btn').addEventListener('click', closeModal);
+        }
+        
+        // --- GESTIÓN DE DATOS ---
+        function resetAllData() {
+            if (confirm('¿Estás seguro que deseas borrar TODOS los datos? Esta acción no se puede deshacer.')) {
+                workers = [];
+                scheduleData = {};
+                localStorage.removeItem('scheduleAppData');
+                generateSchedule();
+                document.getElementById('report-results').style.display = 'none';
+                document.getElementById('worker-name').value = '';
+                if (conn) conn.close();
+                showNotification('Todos los datos han sido borrados.', 'success');
+            }
+        }
+        
+        function saveData() {
+            try {
+                localStorage.setItem('scheduleAppData', JSON.stringify({ workers, schedule: scheduleData }));
+                showNotification('Datos guardados localmente.', 'success');
+            } catch (e) {
+                showNotification(`Error al guardar: ${e.message}`, 'error');
+            }
+        }
+        
+        function loadSavedData() {
+            const savedData = localStorage.getItem('scheduleAppData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    workers = data.workers || [];
+                    scheduleData = data.schedule || {};
+                    if (workers.length > 0) showNotification('Datos cargados correctamente.', 'success');
+                } catch (e) {
+                    console.error('Error al cargar datos:', e);
+                }
+            }
+        }
+
+        function addWorker() {
+            const workerName = document.getElementById('worker-name').value.trim();
+            if (!workerName) return showNotification('Ingresa un nombre de trabajador', 'error');
+            if (workers.includes(workerName)) return showNotification('El trabajador ya existe', 'error');
+            workers.push(workerName);
+            generateSchedule();
+            showNotification(`Trabajador añadido: ${workerName}`, 'success');
+            document.getElementById('worker-name').value = '';
+        }
+        
+        // --- P2P (PEERJS) ---
+        function handleConnection() {
+            const action = document.getElementById('peer-action').value;
+            const peerId = document.getElementById('peer-id').value;
+            if (action === 'host') createRoom();
+            else connectToRoom(peerId);
+        }
+        
+        function createRoom() {
+            peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true, debug: 1 });
+            peer.on('open', id => {
+                document.getElementById('peer-id').value = id;
+                updateConnectionStatus(`Sala creada: ${id}`, true);
+                peer.on('connection', connection => {
+                    conn = connection;
+                    setupDataHandler();
+                    sendFullSchedule();
+                });
+            });
+            peer.on('error', err => showNotification(`Error: ${err}`, 'error'));
+        }
+        
+        function connectToRoom(peerId) {
+            if (!peerId) return showNotification('Ingresa un ID de sala válido', 'error');
+            peer = new Peer({ host: '0.peerjs.com', port: 443, secure: true, debug: 1 });
+            peer.on('open', () => {
+                conn = peer.connect(peerId);
+                conn.on('open', () => {
+                    updateConnectionStatus(`Conectado a: ${peerId}`, true);
+                    conn.send({ type: 'request-data' });
+                });
+                setupDataHandler();
+            });
+            peer.on('error', err => showNotification(`Error: ${err}`, 'error'));
+        }
+        
+        function setupDataHandler() {
+            conn.on('data', data => {
+                if (data.type === 'full-schedule') {
+                    scheduleData = data.payload.schedule;
+                    workers = data.payload.workers;
+                    generateSchedule();
+                    showNotification('Datos sincronizados desde el host', 'success');
+                } else if (data.type === 'schedule-update') {
+                    const { worker, date, entry } = data.payload;
+                    if (!scheduleData[worker]) scheduleData[worker] = {};
+                    scheduleData[worker][date] = entry;
+                    updateScheduleCell(worker, date);
+                    showNotification('Horario actualizado', 'success');
+                } else if (data.type === 'request-data' && peer.id === document.getElementById('peer-id').value) {
+                    sendFullSchedule();
+                }
+            });
+            conn.on('close', () => updateConnectionStatus('Conexión cerrada', false));
+            conn.on('error', err => showNotification(`Error de conexión: ${err}`, 'error'));
+        }
+        
+        function sendFullSchedule() {
+            if (conn && conn.open) conn.send({ type: 'full-schedule', payload: { workers, schedule: scheduleData } });
+        }
+        
+        function sendScheduleUpdate(worker, date, entry) {
+            if (conn && conn.open) conn.send({ type: 'schedule-update', payload: { worker, date, entry } });
+        }
+        
+        // --- HORARIO Y MODALES ---
+        function generateSchedule() {
+            const month = parseInt(document.getElementById('month-select').value);
+            const year = parseInt(document.getElementById('year-select').value);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const tableHead = document.querySelector('#schedule-table thead tr');
+            const tableBody = document.querySelector('#schedule-table tbody');
+            
+            while (tableHead.children.length > 1) tableHead.removeChild(tableHead.lastChild);
+            tableBody.innerHTML = '';
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][date.getDay()];
+                const th = document.createElement('th');
+                th.className = 'day-header';
+                th.textContent = `${dayName} ${day}`;
+                tableHead.appendChild(th);
+            }
+            
+            workers.forEach(worker => {
+                const row = document.createElement('tr');
+                row.className = 'worker-row';
+                const workerCell = document.createElement('td');
+                workerCell.textContent = worker;
+                row.appendChild(workerCell);
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${day}/${month + 1}/${year}`;
+                    const cell = document.createElement('td');
+                    cell.className = 'time-cell';
+                    const entry = scheduleData[worker]?.[dateStr] || {};
+                    cell.innerHTML = entry.entryTime || entry.exitTime ? `<div>${entry.entryTime || '--:--'} - ${entry.exitTime || '--:--'}</div>` : '<div class="highlight">Editar</div>';
+                    if (entry.signature) cell.style.backgroundColor = 'var(--light)';
+                    cell.addEventListener('click', () => openTimeModal(worker, dateStr));
+                    row.appendChild(cell);
+                }
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function openTimeModal(worker, dateStr) {
+            currentWorker = worker;
+            currentDate = dateStr;
+            if (!scheduleData[worker]) scheduleData[worker] = {};
+            const entry = scheduleData[worker][dateStr] || {};
+            document.getElementById('entry-time').value = entry.entryTime || '';
+            document.getElementById('exit-time').value = entry.exitTime || '';
+            modalSignaturePad.clear();
+            if (entry.signature) {
+                modalSignaturePad.fromDataURL(entry.signature);
+            }
+            document.getElementById('time-modal').style.display = 'flex';
+        }
+        
+        function saveTime() {
+            const entryTime = document.getElementById('entry-time').value;
+            const exitTime = document.getElementById('exit-time').value;
+            if (entryTime && exitTime && exitTime < entryTime) return showNotification('La hora de salida no puede ser anterior a la de entrada', 'error');
+            const signatureData = modalSignaturePad.isEmpty() ? null : modalSignaturePad.toDataURL();
+            scheduleData[currentWorker][currentDate] = { 
+                entryTime: entryTime || null, 
+                exitTime: exitTime || null,
+                signature: signatureData
+            };
+            updateScheduleCell(currentWorker, currentDate);
+            sendScheduleUpdate(currentWorker, currentDate, scheduleData[currentWorker][currentDate]);
+            showNotification('Registro guardado correctamente.', 'success');
+            closeModal();
+        }
+        
+        function updateScheduleCell(worker, dateStr) {
+            const dayIndex = parseInt(dateStr.split('/')[0]);
+            const row = Array.from(document.querySelectorAll('.worker-row')).find(r => r.cells[0].textContent === worker);
+            if (!row) return;
+            const cell = row.cells[dayIndex];
+            if (!cell) return;
+            
+            const entry = scheduleData[worker][dateStr];
+            cell.innerHTML = entry.entryTime || entry.exitTime ? `<div>${entry.entryTime || '--:--'} - ${entry.exitTime || '--:--'}</div>` : '<div class="highlight">Editar</div>';
+            cell.style.backgroundColor = entry.signature ? 'var(--light)' : '';
+        }
+        
+        // --- INFORMES Y EXPORTACIÓN ---
+        function generateMonthlyReport() {
+            const month = parseInt(document.getElementById('month-select').value);
+            const year = parseInt(document.getElementById('year-select').value);
+            const reportBody = document.getElementById('report-table-body');
+            reportBody.innerHTML = '';
+
+            workers.forEach(worker => {
+                let totalMinutes = 0;
+                const workerSchedule = scheduleData[worker] || {};
+                
+                for (const dateStr in workerSchedule) {
+                    const dateParts = dateStr.split('/');
+                    const entryMonth = parseInt(dateParts[1]) - 1;
+                    const entryYear = parseInt(dateParts[2]);
+
+                    if (entryMonth === month && entryYear === year) {
+                        const entry = workerSchedule[dateStr];
+                        if (entry.entryTime && entry.exitTime) {
+                            const entryDate = new Date(`1970-01-01T${entry.entryTime}`);
+                            const exitDate = new Date(`1970-01-01T${entry.exitTime}`);
+                            if (exitDate > entryDate) {
+                                totalMinutes += (exitDate - entryDate) / 60000;
+                            }
+                        }
+                    }
+                }
+
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${worker}</td><td>${hours}</td><td>${totalMinutes}</td><td>${formattedTime}</td>`;
+                reportBody.appendChild(row);
+            });
+
+            document.getElementById('report-results').style.display = 'block';
+            showNotification('Informe generado correctamente', 'success');
+        }
+        
+        function exportDataAsTxt() {
+            const month = parseInt(document.getElementById('month-select').value);
+            const year = parseInt(document.getElementById('year-select').value);
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            let txtContent = `INFORME DE HORARIOS - ${monthNames[month]} ${year}\n\n`;
+
+            workers.forEach(worker => {
+                txtContent += `============================================\n`;
+                txtContent += `TRABAJADOR: ${worker}\n`;
+                txtContent += `============================================\n`;
+                let hasDataForMonth = false;
+
+                const workerSchedule = scheduleData[worker] || {};
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${day}/${month + 1}/${year}`;
+                    const entry = workerSchedule[dateStr];
+                    if (entry && (entry.entryTime || entry.exitTime)) {
+                        txtContent += `Fecha: ${dateStr}\n  Entrada: ${entry.entryTime || 'N/A'}\n  Salida:  ${entry.exitTime || 'N/A'}\n`;
+                        if (entry.signature) txtContent += `  (Firmado)\n`;
+                        txtContent += `\n`;
+                        hasDataForMonth = true;
+                    }
+                }
+
+                if (!hasDataForMonth) {
+                    txtContent += "No hay datos registrados para este trabajador en este mes.\n\n";
+                }
+            });
+            
+            const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, `informe_horario_${year}_${monthNames[month]}.txt`);
+            showNotification('Informe TXT exportado', 'success');
+        }
+
+        function exportDataAsJson() {
+            const dataToSave = { workers, schedule: scheduleData };
+            const dataStr = JSON.stringify(dataToSave, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+            saveAs(blob, `datos_horario.json`);
+            showNotification('Datos exportados en formato JSON', 'success');
+        }
+        
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    if (!file.name.endsWith('.json')) throw new Error('Formato de archivo no soportado');
+                    const data = JSON.parse(e.target.result);
+                    workers = data.workers || [];
+                    scheduleData = data.schedule || {};
+                    generateSchedule();
+                    showNotification('Datos importados correctamente', 'success');
+                } catch (error) {
+                    showNotification(`Error al importar: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // --- UTILIDADES ---
+        function closeModal() {
+            document.getElementById('time-modal').style.display = 'none';
+        }
+        
+        function setCurrentTime(field) {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById(`${field}-time`).value = `${hours}:${minutes}`;
+        }
+        
+        function showNotification(message, type = 'success') {
+            const el = document.getElementById('notification');
+            el.textContent = message;
+            el.className = `notification ${type} show`;
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+        
+        function updateConnectionStatus(message, isConnected) {
+            const statusElement = document.getElementById('connection-status');
+            statusElement.innerHTML = isConnected ? `<i class="fas fa-check-circle"></i> ${message}` : `<i class="fas fa-times-circle"></i> ${message}`;
+            statusElement.className = `status-indicator ${isConnected ? 'status-online' : 'status-offline'}`;
+        }
+    </script>
+</body>
+</html>
